@@ -9,7 +9,7 @@ from sklearn.utils import shuffle
 mnist_cate_dir = os.path.join("..", "dataset/trainingSet")
 
 
-def load_mnist_dataset() -> Tuple[np.array, np.array]:
+def load_mnist_dataset(data_need_flatten=True) -> Tuple[np.array, np.array]:
     """
     Load Mnist dataset
     The data is in image format with 28*28 pixels
@@ -27,6 +27,7 @@ def load_mnist_dataset() -> Tuple[np.array, np.array]:
             ......
     Images will be loaded into numpy array with dtype float32, and normalized into
     range [0,1]
+    @param data_need_flatten: whether the image are keep two dimsion or flatten to one dimension
     @return:
             dataX: M*N dim array floa32, where M is number of samples, N is the total number of pixels of one image
             dataY: M dim array int32, M is number of samples, labels for correspding image
@@ -37,7 +38,11 @@ def load_mnist_dataset() -> Tuple[np.array, np.array]:
             img = Image.open(os.path.join(mnist_cate_dir, subdir, img_file))
             img = np.array(img, dtype="float32")
             img /= 255.0
-            dataX.append(img.flatten())
+            if data_need_flatten is True:
+                dataX.append(img.flatten())
+            else:
+                if len(np.shape(img)) < 3:
+                    dataX.append(np.expand_dims(img,axis=-1))
             dataY.append(int(subdir))
 
     dataX = np.array(dataX, dtype="float32")
