@@ -65,18 +65,21 @@ def test_ann(model: keras.models.Model, dataX: np.array, dataY: np.array):
     print("After parameter normalization, accuracy is {:.2%}".format(accu))
 
 
-def save_normed_model(model: keras.models.Model):
-    model.save(fcn_norm_model_path)
+def save_normed_model(model: keras.models.Model,model_type:int):
+    if model_type == TYPE_FCN:
+        model.save(fcn_norm_model_path)
+    else:
+        model.save(conv_norm_model_path)
 
 
 if __name__ == "__main__":
     # full connected network test
     # -------------------------
-    # model = load_model()
+    # model = load_model(TYPE_FCN)
     # dataX, dataY = data_preprocessing.load_mnist_dataset()
     # normed_model = param_normalization(model, dataX[-50:])
     # test_ann(normed_model, dataX[:100], dataY[:100])
-    # save_normed_model(normed_model)
+    # save_normed_model(normed_model,TYPE_FCN)
 
     # conv model network test
     # -------------------------
@@ -85,3 +88,4 @@ if __name__ == "__main__":
         data_need_flatten=False)
     normed_model = param_normalization(model, dataX[-50:])
     test_ann(normed_model, dataX[:100], dataY[:100])
+    save_normed_model(normed_model,TYPE_CONV)
