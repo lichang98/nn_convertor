@@ -22,13 +22,17 @@ fcn_norm_fix_model_path = os.path.join(
     ".", "ann_model_descs/fcn_normed_fixed_model.h5")
 conv_norm_fix_model_path = os.path.join(
     ".", "ann_model_descs/conv_normed_fixed_model.h5")
+conv_bn_norm_fix_model_path = os.path.join(
+    ".", "ann_model_descs/conv_bn_normed_fixed_model.h5")
 
 
 def load_model(model_type: int) -> keras.models.Model:
     if model_type == ann_normalize.TYPE_FCN:
         return keras.models.load_model(ann_normalize.fcn_norm_model_path)
-    else:
+    elif model_type == ann_normalize.TYPE_CONV_BN:
         return keras.models.load_model(ann_normalize.conv_norm_model_path)
+    else:
+        return keras.models.load_model(ann_normalize.conv_bn_norm_model_path)
 
 
 def fix_point(model: keras.models.Model, bit_width_weight: int, dataX: np.array) -> keras.models.Model:
@@ -80,8 +84,10 @@ def test_model(model: keras.models.Model, dataX: np.array, dataY: np.array):
 def save_model(model: keras.models.Model, model_type: int):
     if model_type == ann_normalize.TYPE_FCN:
         model.save(fcn_norm_fix_model_path)
-    else:
+    elif model_type == ann_normalize.TYPE_CONV:
         model.save(conv_norm_fix_model_path)
+    else:
+        model.save(conv_bn_norm_fix_model_path)
 
 
 if __name__ == "__main__":
@@ -96,9 +102,17 @@ if __name__ == "__main__":
 
     # test conv neural network fix point
     # --------------------------------------
-    model = load_model(ann_normalize.TYPE_CONV)
+    # model = load_model(ann_normalize.TYPE_CONV)
+    # dataX, dataY = data_preprocessing.load_mnist_dataset(
+    #     data_need_flatten=False)
+    # fixed_point_model = fix_point(model, 8, dataX[-10:])
+    # test_model(fixed_point_model, dataX[-100:], dataY[-100:])
+    # save_model(fixed_point_model, ann_normalize.TYPE_CONV)
+
+    # test conv bn neural network fix point
+    model = load_model(ann_normalize.TYPE_CONV_BN)
     dataX, dataY = data_preprocessing.load_mnist_dataset(
         data_need_flatten=False)
-    fixed_point_model = fix_point(model, 8, dataX[-10:])
-    test_model(fixed_point_model, dataX[-100:], dataY[-100:])
-    save_model(fixed_point_model, ann_normalize.TYPE_CONV)
+    fixed_point_model = fix_point(model, 8, dataX[-100:])
+    test_model(fixed_point_model, dataX[:100], dataY[:100])
+    save_model(fixed_point_model, ann_normalize.TYPE_CONV_BN)
