@@ -56,14 +56,16 @@ def param_normalization(model: keras.Model, dataX: np.array) -> keras.Model:
             if model.layers[i].__class__.__name__ == "BatchNormalization":
                 print("prev layer index={}, weight shape={}".format(
                     prev_layer_idx_with_wt, np.shape(model.layers[prev_layer_idx_with_wt].get_weights())))
-                print("bn var={}, sigma={}".format(np.shape(keras.backend.get_value(model.layers[i].moving_variance)),
-                                                   np.shape(keras.backend.get_value(model.layers[i].gamma))))
+                print("bn var={}, sigma={},epsilon={}".format(np.shape(keras.backend.get_value(model.layers[i].moving_variance)),
+                                                   np.shape(keras.backend.get_value(model.layers[i].gamma)), 
+                                                   np.shape(keras.backend.get_value(model.layers[i].epsilon))))
                 # applied bn operation to prev conv layer
                 gamma = np.array(keras.backend.get_value(
-                    model.layers[i].moving_variance), dtype="float32")
+                    model.layers[i].gamma), dtype="float32")
                 variance = np.array(keras.backend.get_value(
                     model.layers[i].moving_variance), dtype="float32")
-                adjust_factor = gamma / variance
+                epsilon = np.array(keras.backend.get_value(model.layers[i].epsilon),dtype="float32")
+                adjust_factor = gamma / np.sqrt(variance+epsilon)
                 wts = deepcopy(
                     np.array(model.layers[prev_layer_idx_with_wt].get_weights(), dtype="float32"))
                 wts = adjust_factor * wts
@@ -146,4 +148,4 @@ if __name__ == "__main__":
         data_need_flatten=False)
     normed_model = param_normalization(model, dataX[-50:])
     test_ann(normed_model, dataX[:100], dataY[:100])
-    # save_normed_model(normed_model, TYPE_CONV_BN)
+    save_normed_model(normed_model, TYPE_CONV_BN)
