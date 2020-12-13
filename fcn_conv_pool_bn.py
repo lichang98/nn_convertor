@@ -13,7 +13,7 @@ def build_model(input_shape: tuple):
     Create full connected network
     """
     x = keras.Input(shape=input_shape, dtype="float32")
-    conv1 = keras.layers.Conv2D(512, (2, 2), strides=(
+    conv1 = keras.layers.Conv2D(1024, (2, 2), strides=(
         2, 2), use_bias=False, activation="relu")(x)
     pool2 = keras.layers.MaxPool2D(strides=(2, 2))(conv1)
     conv3 = keras.layers.Conv2D(256, (1, 1), strides=(
@@ -27,7 +27,7 @@ def build_model(input_shape: tuple):
     fc10 = keras.layers.Dense(10, activation="softmax", use_bias=False)(fc9)
 
     model = keras.models.Model(inputs=x, outputs=fc10)
-    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001), loss="categorical_crossentropy",
+    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.0001), loss="categorical_crossentropy",
                   metrics=["accuracy"])
     model.summary()
     return model

@@ -4,6 +4,7 @@ Parameter normlization
 Load trained model of ann, feed with sample data and 
 apply parameter normalization on original ann network
 """
+import tensorflow as tf
 import keras
 from keras import models
 import numpy as np
@@ -44,24 +45,51 @@ def param_normalization(model: keras.Model, dataX: np.array) -> keras.Model:
     beg_layer_idx = 0
     if model.layers[0].__class__.__name__ == "InputLayer":
         beg_layer_idx = 1
-    
+
     layer_names = [layer.__class__.__name__ for layer in model.layers]
     print("layer names={}".format(layer_names))
-    flag_need_change=False
-    intermd_layers=[]
+    intermd_layers = []
+    model.summary()
     if "BatchNormalization" in layer_names:
-        flag_need_change = True
-        intermd_layers.append(model.input)
+        prev_layer_idx_with_wt = beg_layer_idx
+        for i in range(beg_layer_idx, len(model.layers)):
+            if model.layers[i].__class__.__name__ == "BatchNormalization":
+                print("prev layer index={}, weight shape={}".format(
+                    prev_layer_idx_with_wt, np.shape(model.layers[prev_layer_idx_with_wt].get_weights())))
+                print("bn var={}, sigma={}".format(np.shape(keras.backend.get_value(model.layers[i].moving_variance)),
+                                                   np.shape(keras.backend.get_value(model.layers[i].gamma))))
+                # applied bn operation to prev conv layer
+                gamma = np.array(keras.backend.get_value(
+                    model.layers[i].moving_variance), dtype="float32")
+                variance = np.array(keras.backend.get_value(
+                    model.layers[i].moving_variance), dtype="float32")
+                adjust_factor = gamma / variance
+                wts = deepcopy(
+                    np.array(model.layers[prev_layer_idx_with_wt].get_weights(), dtype="float32"))
+                wts = adjust_factor * wts
+                model.layers[prev_layer_idx_with_wt].set_weights(wts)
 
+            if len(np.shape(model.layers[i].get_weights())) > 1:
+                prev_layer_idx_with_wt = i
+
+        # remove bn layer
+        intermd_layers.append(model.input)
+        for layer in model.layers:
+            if layer.__class__.__name__ == "BatchNormalization":
+                continue
+            else:
+                intermd_layers.append(layer(intermd_layers[-1]))
+
+    model = keras.models.Model(inputs=intermd_layers[0], outputs=intermd_layers[-1])
+    model.summary()
     print("Start parameter normalization...")
     for i in range(beg_layer_idx, len(model.layers)):
         print("Current processing layer index {}, layer name {}".format(
             i, model.layers[i].__class__.__name__))
         if len(np.shape(model.layers[i].get_weights())) <= 1:
-            if flag_need_change is True:
-                intermd_layers.append(model.layers[i](intermd_layers[-1]))
             continue
-        print("Appliy scale to layer index {}, name={}".format(i, model.layers[i].__class__.__name__))
+        print("Appliy scale to layer index {}, name={}".format(
+            i, model.layers[i].__class__.__name__))
         max_wt, max_act = 0, 0
         input_weights = deepcopy(np.array(model.layers[i].get_weights()))
         max_wt = max(max_wt, np.max(input_weights))
@@ -70,18 +98,10 @@ def param_normalization(model: keras.Model, dataX: np.array) -> keras.Model:
         max_act = max(max_act, np.max(act_out))
         scale_factor = max(max_wt, max_act)
         applied_factor = scale_factor/previous_factor
-        if flag_need_change is False:
-            model.layers[i].set_weights(input_weights/applied_factor)
-        else:
-            if model.layers[i].__class__.__name__ != "BatchNormalization":
-                intermd_layers.append(model.layers[i](intermd_layers[-1]))
+        model.layers[i].set_weights(input_weights/applied_factor)
         previous_factor = scale_factor
 
-    if flag_need_change is True:
-        intermd_model = keras.models.Model(inputs=intermd_layers[0], outputs=intermd_layers[-1])
-        return intermd_model
-    else:
-        return model
+    return model
 
 
 def test_ann(model: keras.models.Model, dataX: np.array, dataY: np.array):
