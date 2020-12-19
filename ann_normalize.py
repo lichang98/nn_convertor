@@ -86,7 +86,7 @@ def param_normalization(model: keras.Model, dataX: np.array) -> keras.Model:
         model.summary()
 
     print("Start parameter normalization...")
-    for i in range(beg_layer_idx, len(model.layers)):
+    for i in range(beg_layer_idx, len(model.layers)-1):
         print("Current processing layer index {}, layer name {}".format(
             i, model.layers[i].__class__.__name__))
         if len(np.shape(model.layers[i].get_weights())) <= 1:
