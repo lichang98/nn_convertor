@@ -73,12 +73,11 @@ def fix_point(model: keras.models.Model, bit_width_weight: int, dataX: np.array)
     return model
 
 
-def test_model(model: keras.models.Model, dataX: np.array, dataY: np.array):
+def test_model(model: keras.models.Model, dataX: np.array, dataY: np.array)->float:
     preds = model.predict(dataX, batch_size=1, verbose=1)
     preds = np.argmax(preds, axis=-1)
     accu = np.sum(preds == np.argmax(dataY, axis=-1))/len(preds)
-    print(
-        "After convert to fix point integer, accuracy is {:.2%}".format(accu))
+    return accu
 
 
 def save_model(model: keras.models.Model, model_type: int):

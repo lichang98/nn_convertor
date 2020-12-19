@@ -6,7 +6,7 @@ from typing import Tuple
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import shuffle
 
-mnist_cate_dir = os.path.join("..", "dataset/trainingSet")
+mnist_cate_dir = os.path.join("..", "..","dataset/trainingSet/trainingSet")
 
 
 def load_mnist_dataset(data_need_flatten=True) -> Tuple[np.array, np.array]:

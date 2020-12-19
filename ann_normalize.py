@@ -82,8 +82,9 @@ def param_normalization(model: keras.Model, dataX: np.array) -> keras.Model:
             else:
                 intermd_layers.append(layer(intermd_layers[-1]))
 
-    model = keras.models.Model(inputs=intermd_layers[0], outputs=intermd_layers[-1])
-    model.summary()
+        model = keras.models.Model(inputs=intermd_layers[0], outputs=intermd_layers[-1])
+        model.summary()
+
     print("Start parameter normalization...")
     for i in range(beg_layer_idx, len(model.layers)):
         print("Current processing layer index {}, layer name {}".format(
@@ -106,12 +107,11 @@ def param_normalization(model: keras.Model, dataX: np.array) -> keras.Model:
     return model
 
 
-def test_ann(model: keras.models.Model, dataX: np.array, dataY: np.array):
-    print("Start testing parameter normalization performace...")
+def test_ann(model: keras.models.Model, dataX: np.array, dataY: np.array)->float:
     preds = model.predict(dataX, batch_size=1, verbose=1)
     preds = np.argmax(preds, axis=-1)
     accu = np.sum(preds == np.argmax(dataY, axis=-1))/len(preds)
-    print("After parameter normalization, accuracy is {:.2%}".format(accu))
+    return accu
 
 
 def save_normed_model(model: keras.models.Model, model_type: int):
